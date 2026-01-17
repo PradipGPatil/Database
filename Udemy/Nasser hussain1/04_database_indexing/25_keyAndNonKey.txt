@@ -1,0 +1,155 @@
+25_keyAndNonKey
+
+key create index 
+non key include some column inside the index  which available in Postgres
+
+LINE 1: d students;
+        ^
+Postgres=# \d students;
+                              Table "public.students"
+   Column   |  Type   | Collation | Nullable |               Default
+------------+---------+-----------+----------+--------------------------------------
+ id         | integer |           | not null | nextval('students_id_seq'::regclass)
+ g          | integer |           |          |
+ firstname  | text    |           |          |
+ lastname   | text    |           |          |
+ middlename | text    |           |          |
+ address    | text    |           |          |
+ bio        | text    |           |          |
+ dob        | date    |           |          |
+ id1        | integer |           |          |
+ id2        | integer |           |          |
+ id3        | integer |           |          |
+ id4        | integer |           |          |
+ id5        | integer |           |          |
+ id6        | integer |           |          |
+ id7        | integer |           |          |
+ id8        | integer |           |          |
+ id9        | integer |           |          |
+Indexes:
+    "students_pkey" PRIMARY KEY, btree (id)
+
+
+postgres=# explain analyze select id, g from students where g>80 and g<90 order by g desc ;
+                                                                  QUERY PLAN
+-----------------------------------------------------------------------------------------------------------------------------------------------
+ Gather Merge  (cost=1484354.44..1915403.00 rows=3694444 width=8) (actual time=11165.081..12509.517 rows=4498341 loops=1)
+   Workers Planned: 2
+   Workers Launched: 2
+   ->  Sort  (cost=1483354.42..1487972.47 rows=1847222 width=8) (actual time=11060.803..11298.083 rows=1499447 loops=3)
+         Sort Key: g DESC
+         Sort Method: external merge  Disk: 26952kB
+         Worker 0:  Sort Method: external merge  Disk: 26352kB
+         Worker 1:  Sort Method: external merge  Disk: 26224kB
+         ->  Parallel Seq Scan on students  (cost=0.00..1265831.00 rows=1847222 width=8) (actual time=181.009..10203.935 rows=1499447 loops=3)
+               Filter: ((g > 80) AND (g < 90))
+               Rows Removed by Filter: 15167220
+ Planning Time: 1.732 ms
+ JIT:
+   Functions: 12
+   Options: Inlining true, Optimization true, Expressions true, Deforming true
+   Timing: Generation 8.921 ms (Deform 6.463 ms), Inlining 326.392 ms, Optimization 123.582 ms, Emission 89.245 ms, Total 548.140 ms
+ Execution Time: 12784.873 ms
+
+
+
+-- we have created index on g  but it suppose to go to the index scan and go to heap  ans: because as per postgres static result between grade 80 and 90 not good for index scan so 
+in below query I have reduce grade range to low value so it will 
+Postgres=# explain (analyze,buffers) select id, g from students where g > 80 and g < 90 order by g desc ;
+                                                                 QUERY PLAN
+---------------------------------------------------------------------------------------------------------------------------------------------
+ Gather Merge  (cost=1484354.44..1915403.00 rows=3694444 width=8) (actual time=4861.639..5323.423 rows=4498341 loops=1)
+   Workers Planned: 2
+   Workers Launched: 2
+   Buffers: shared hit=1790 read=951613, temp read=19847 written=19900
+   ->  Sort  (cost=1483354.42..1487972.47 rows=1847222 width=8) (actual time=4839.308..4923.482 rows=1499447 loops=3)
+         Sort Key: g DESC
+         Sort Method: external merge  Disk: 27056kB
+         Buffers: shared hit=1790 read=951613, temp read=19847 written=19900
+         Worker 0:  Sort Method: external merge  Disk: 26000kB
+         Worker 1:  Sort Method: external merge  Disk: 26472kB
+         ->  Parallel Seq Scan on students  (cost=0.00..1265831.00 rows=1847222 width=8) (actual time=51.464..4523.067 rows=1499447 loops=3)
+               Filter: ((g > 80) AND (g < 90))
+               Rows Removed by Filter: 15167220
+               Buffers: shared hit=1718 read=951613
+ Planning:
+   Buffers: shared hit=25
+ Planning Time: 0.379 ms
+ JIT:
+   Functions: 12
+   Options: Inlining true, Optimization true, Expressions true, Deforming true
+   Timing: Generation 1.021 ms (Deform 0.347 ms), Inlining 86.197 ms, Optimization 39.451 ms, Emission 27.226 ms, Total 153.894 ms
+ Execution Time: 5431.986 ms
+(22 rows)
+
+
+postgres=# explain analyze select id, g from students where g > 95 and g < 96 order by g desc ;
+                                                            QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------------
+ Index Scan Backward using students_g_idx on students  (cost=0.56..8.58 rows=1 width=8) (actual time=1.969..1.970 rows=0 loops=1)
+   Index Cond: ((g > 95) AND (g < 96))
+ Planning Time: 0.142 ms
+ Execution Time: 1.988 ms
+(4 rows)
+
+// created key with non key index. In below case we did not need to go to the heap because we are searching for data from index only but this index is large
+
+postgres=# create index students_g_idx on students(g) include (id);
+CREATE INDEX
+postgres=# explain (analyze,buffers) select id, g from students where g > 10 and g < 20 order by g desc ;
+                                                                         QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan Backward using students_g_idx on students  (cost=0.56..129668.57 rows=4185000 width=8) (actual time=58.836..1786.910 rows=4499814 loops=1)
+   Index Cond: ((g > 10) AND (g < 20))
+   Heap Fetches: 0
+   Buffers: shared hit=272 read=12297
+ Planning:
+   Buffers: shared hit=33 read=8 dirtied=3  // shared hit is cached
+ Planning Time: 4.161 ms
+ JIT:
+   Functions: 2
+   Options: Inlining false, Optimization false, Expressions true, Deforming true
+   Timing: Generation 5.536 ms (Deform 0.000 ms), Inlining 0.000 ms, Optimization 7.555 ms, Emission 51.069 ms, Total 64.159 ms
+ Execution Time: 1899.278 ms
+(12 rows)
+
+
+
+vacuum (verbose) students;-- to remove cache 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

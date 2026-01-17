@@ -1,0 +1,39 @@
+Cursors are useful if you want to return large amount of data to client but gradually. Without cursor, to return 10000 rows to the client , 
+the query has to execute, grab the results and stream all the rows down to the client which takes time.
+
+With cursor the client can execute the query and get a cursor back (pointer) and fetch result at their ease. 100 rows at time, 1000 etc, good for paging results
+
+--Cursor vs Pagination
+using a server side cursor, the client execute the query once and creates a cursor on the db, 
+and the client then simply asks the cursor to fetch the next X rows. this way the client can slowly consume the rows
+
+on paging as we know it, client execute a query and says give me 1000 rows back. then the client asks for the next 2000 rows by 
+reexecuting the same query again but with a filter or an offset,
+
+so one locks the snapshot as along running transaction but make it more efficient for client.
+
+one executes many queries but starts a new transaction each.
+
+be wary of the server side cursor staying for a while because they will be treated as long running transaction and i talked about the problems with those
+
+
+adventages 
+1) you have large data , then you want to work pice by pice then you can open the cursor and start working one by one 
+
+
+disadventage
+- memary allocated in database for this transactin and cursor 
+- long running transaction 
+
+
+use adventureWorks2022
+go
+begin tran
+declare c cursor SCROLL for    select ProductID from  Production.Product;
+
+OPEN c;
+
+FETCH NEXT FROM c
+
+fetch last from c
+DEALLOCATE  c

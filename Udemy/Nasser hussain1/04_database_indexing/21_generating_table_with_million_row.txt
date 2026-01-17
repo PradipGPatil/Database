@@ -1,0 +1,20 @@
+docker run  --name pg -d e -_PASSWORD=root Postgres
+docker exec -it pg bash    -- to go inside the container
+psql -U postgres;     	-- to open psql command which will execute query
+
+
+postgres=# \d temp
+                Table "public.temp"
+ Column |  Type   | Collation | Nullable | Default
+--------+---------+-----------+----------+---------
+ t      | integer |           |          |
+
+postgres=# select * from temp limit 10;
+
+postgres=# insert into temp(t) select random()*100 from generate_series(0,1000000);
+INSERT 0 1000001
+postgres=# select count(*) from temp;
+  count
+---------
+ 1000001
+(1 row)

@@ -1,0 +1,48 @@
+id int, 	// has b tree index
+g int , 	// has b tree index
+name text,
+
+Postgres=# explain select * from grades;
+                           QUERY PLAN
+-----------------------------------------------------------------
+ Seq Scan on grades  (cost=0.00..83682.01 rows=5000001 width=23) -- int 4 , int 4 and text 15 byte
+(1 row)
+
+-- planer go for sql scan and cost=0.00 mean how many times take to fetch first page sometime Postgres need to do some work before fetching the data 
+rows=5000001 this is approximate estimation we have not gone to heap file still we know approximate row because database keep statistic 
+width=23 : some of all the bytes
+
+Postgres=# explain select * from grades  order by g;
+                                      QUERY PLAN
+---------------------------------------------------------------------------------------
+ Index Scan using grades_g_idx on grades  (cost=0.43..226673.06 rows=5000001 width=23)
+(1 row)
+
+here initial cost is 0.43 because database need to order by g
+Postgres=# explain select * from grades order by name ;
+                                      QUERY PLAN
+--------------------------------------------------------------------------------------
+ Gather Merge  (cost=359622.08..845767.29 rows=4166668 width=23)
+   Workers Planned: 2
+   ->  Sort  (cost=358622.06..363830.40 rows=2083334 width=23)
+         Sort Key: name
+         ->  Parallel Seq Scan on grades  (cost=0.00..54515.34 rows=2083334 width=23)
+(5 rows)
+as we do not have index on name Postgres go to full table scan with cost 0 but for sort we have more cost and 2 worker planed and in end result of the two worked is merged.
+
+
+
+
+Postgres=# explain select * from grades where id=10;
+                                QUERY PLAN
+---------------------------------------------------------------------------
+ Index Scan using grades_pkey on grades  (cost=0.43..8.45 rows=1 width=23)
+   Index Cond: (id = 10)
+(2 rows)
+
+cost is 0.43 to fetch first page 
+
+
+
+
+

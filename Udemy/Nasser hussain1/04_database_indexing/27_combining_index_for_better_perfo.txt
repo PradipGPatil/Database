@@ -1,0 +1,19 @@
+27_combining_index_for_better_performance
+
+create index on test(a,b);
+
+select analyze select c from test where a=7;
+
+this query will do bimap scan on test_a_b_idx index because we want to find c. Because it on left hand side scaning a will be simple 
+
+
+
+select analyze select c from test where b=7;
+it will not use index scan because b is at right hand side so it will go for full table scan 
+
+select analyze select c from test where a=7 and b=10;
+it will index only scan 
+
+
+select analyze select c from test where a=7 or b=10;
+it will go for full table scan

@@ -1,0 +1,59 @@
+24_bitmapIndex_fullTable_indexScan
+table has id, name , grade column
+"g" btree(g) include (id)
+g= key column
+id=non key column
+
+select name from grade where id<100; and id has index 
+
+-- here database go to index scan as Postgres know how many row need to fetch(database keep record of static) which is less than 100 . 
+so it go to the index and find the page number which want to fetch from heap and get the name (this is called random access) 
+
+select name from grade where id>100;
+suppose we want to search id more than 100 then Postgres identify that we have around 1 M row
+ so instead of using index and jumping throw page is costly because expect 100 all pages 
+satisfy the condition.so Postgres go to 'sq scan' or we can say 'full table scan'
+
+if you have row which is medium row then Postgres does bitmap scan
+select name from grade where g>95 and id<100; -- it will do index scan on both index and grade and do  bitmapAnd scan 
+here g has index so Postgres does index scan and store bit in array 1 telling that this page satisfy the condition and 
+Postgres go to the heap and fetch all the pages which satisfy the condition 
+after fetching pages Postgres does recheck the condition 
+
+                            Table "public.grades"
+ Column |  Type   | Collation | Nullable |              Default
+--------+---------+-----------+----------+------------------------------------
+ id     | integer |           | not null | nextval('grades_id_seq'::regclass)
+ g      | integer |           |          |
+ name   | text    |           |          |
+Indexes:
+    "grades_pkey" PRIMARY KEY, btree (id)
+    "grades_g_idx" btree (g)
+
+                                         ^
+
+
+postgres=# vacuum grades;
+VACUUM
+postgres=# explain select name from grades where id=55555;
+                                QUERY PLAN
+---------------------------------------------------------------------------
+ Index Scan using grades_pkey on grades  (cost=0.43..8.45 rows=1 width=14)
+   Index Cond: (id = 55555)
+(2 rows)
+
+postgres=# explain select * from grades where g > 95;
+                                    QUERY PLAN
+-----------------------------------------------------------------------------------
+ Bitmap Heap Scan on grades  (cost=2313.08..38584.66 rows=207567 width=22)
+   Recheck Cond: (g > 95)
+   ->  Bitmap Index Scan on grades_g_idx  (cost=0.00..2261.18 rows=207567 width=0)
+         Index Cond: (g > 95)
+(4 rows)
+
+postgres=# explain select * from grades where id > 100;
+                           QUERY PLAN
+-----------------------------------------------------------------
+ Seq Scan on grades  (cost=0.00..96177.01 rows=4999904 width=22)
+   Filter: (id > 100)
+(2 rows)

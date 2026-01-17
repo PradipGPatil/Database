@@ -1,0 +1,135 @@
+PS C:\Users\pradip.patil> docker ps
+CONTAINER ID   IMAGE      COMMAND                  CREATED         STATUS         PORTS      NAMES
+59507d3a99f3   postgres   "docker-entrypoint.s…"   3 minutes ago   Up 3 minutes   5432/tcp   employees
+
+PS C:\Users\pradip.patil> docker exec -it employees bash
+root@59507d3a99f3:/# psql -U postgres
+
+
+postgres=# create table employees( id serial primary key, name text);
+
+create or replace function random_string(length integer) returns text as
+$$
+declare
+  chars text[] := '{0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}';
+  result text := '';
+  i integer := 0;
+  length2 integer := (select trunc(random() * length + 1));
+begin
+  if length2 < 0 then
+    raise exception 'Given length cannot be less than 0';
+  end if;
+  for i in 1..length2 loop
+    result := result || chars[1+random()*(array_length(chars, 1)-1)];
+  end loop;
+  return result;
+end;
+$$ language plpgsql;
+
+
+insert into employees(name)(select random_string(10) from generate_series(0, 1000000));
+CREATE TABLE
+CREATE FUNCTION
+INSERT 0 1000001
+postgres=# drop table employees;
+DROP TABLE
+postgres=# create table employees( id serial primary key, name text);
+
+create or replace function random_string(length integer) returns text as
+$$
+declare
+  chars text[] := '{0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}';
+  result text := '';
+  i integer := 0;
+  length2 integer := (select trunc(random() * length + 1));
+begin
+  if length2 < 0 then
+    raise exception 'Given length cannot be less than 0';
+  end if;
+  for i in 1..length2 loop
+    result := result || chars[1+random()*(array_length(chars, 1)-1)];
+  end loop;
+  return result;
+end;
+$$ language plpgsql;
+
+
+insert into employees(name)(select random_string(10) from generate_series(0, 10000000));
+CREATE TABLE
+CREATE FUNCTION
+INSERT 0 10000001
+postgres=# \d employees
+                            Table "public.employees"
+ Column |  Type   | Collation | Nullable |                Default
+--------+---------+-----------+----------+---------------------------------------
+ id     | integer |           | not null | nextval('employees_id_seq'::regclass)
+ name   | text    |           |          |
+Indexes:
+    "employees_pkey" PRIMARY KEY, btree (id)
+
+postgres=# explain analyze select id from employees where id=1000;
+                                                          QUERY PLAN
+-------------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan using employees_pkey on employees  (cost=0.43..4.45 rows=1 width=4) (actual time=0.071..0.072 rows=1 loops=1)
+   Index Cond: (id = 1000)
+   Heap Fetches: 0
+ Planning Time: 0.135 ms
+ Execution Time: 0.084 ms
+(5 rows)
+
+postgres=# explain analyze select name from employees where id =45454545;
+                                                        QUERY PLAN
+--------------------------------------------------------------------------------------------------------------------------
+ Index Scan using employees_pkey on employees  (cost=0.43..8.45 rows=1 width=6) (actual time=0.009..0.009 rows=0 loops=1)
+   Index Cond: (id = 45454545)
+ Planning Time: 0.097 ms
+ Execution Time: 0.022 ms
+(4 rows)
+
+postgres=# explain analyze select id from employees where name ='Zs';
+                                                          QUERY PLAN
+-------------------------------------------------------------------------------------------------------------------------------
+ Gather  (cost=1000.00..104104.82 rows=54 width=4) (actual time=7.983..210.792 rows=237 loops=1)
+   Workers Planned: 2
+   Workers Launched: 2
+   ->  Parallel Seq Scan on employees  (cost=0.00..103099.42 rows=22 width=4) (actual time=4.708..161.573 rows=79 loops=3)
+         Filter: (name = 'Zs'::text)
+         Rows Removed by Filter: 3333255
+ Planning Time: 0.061 ms
+ JIT:
+   Functions: 12
+   Options: Inlining false, Optimization false, Expressions true, Deforming true
+   Timing: Generation 1.637 ms (Deform 0.230 ms), Inlining 0.000 ms, Optimization 0.571 ms, Emission 7.944 ms, Total 10.152 ms
+ Execution Time: 211.084 ms
+(12 rows)
+
+postgres=# create index employees_name_idx on employees(name);
+CREATE INDEX
+postgres=# explain analyze select id from employees where name ='Zs';
+                                                          QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on employees  (cost=4.85..216.26 rows=54 width=4) (actual time=0.095..0.999 rows=237 loops=1)
+   Recheck Cond: (name = 'Zs'::text)
+   Heap Blocks: exact=237
+   ->  Bitmap Index Scan on employees_name_idx  (cost=0.00..4.84 rows=54 width=0) (actual time=0.048..0.048 rows=237 loops=1)
+         Index Cond: (name = 'Zs'::text)
+ Planning Time: 0.209 ms
+ Execution Time: 1.032 ms
+(7 rows)
+
+postgres=# explain analyze select id from employees where name like '%Zs%';
+                                                          QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------
+ Gather  (cost=1000.00..104190.34 rows=900 width=4) (actual time=2.992..238.191 rows=12013 loops=1)
+   Workers Planned: 2
+   Workers Launched: 2
+   ->  Parallel Seq Scan on employees  (cost=0.00..103100.34 rows=375 width=4) (actual time=2.741..219.715 rows=4004 loops=3)
+         Filter: (name ~~ '%Zs%'::text)
+         Rows Removed by Filter: 3329329
+ Planning Time: 0.079 ms
+ JIT:
+   Functions: 12
+   Options: Inlining false, Optimization false, Expressions true, Deforming true
+   Timing: Generation 0.607 ms (Deform 0.225 ms), Inlining 0.000 ms, Optimization 0.429 ms, Emission 7.548 ms, Total 8.584 ms
+ Execution Time: 238.835 ms
+(12 rows)

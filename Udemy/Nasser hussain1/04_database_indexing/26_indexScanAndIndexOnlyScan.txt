@@ -1,0 +1,50 @@
+26_indexScanAndIndexOnlyScan
+
+
+postgres=# \d grades;
+                            Table "public.grades"
+ Column |  Type   | Collation | Nullable |              Default
+--------+---------+-----------+----------+------------------------------------
+ id     | integer |           | not null | nextval('grades_id_seq'::regclass)
+ g      | integer |           |          |
+ name   | text    |           |          |
+Indexes:
+    "grades_pkey" PRIMARY KEY, btree (id)
+    "grades_g_idx" btree (g)
+
+postgres=# explain analyze select name from grades where id=7;
+                                                     QUERY PLAN
+---------------------------------------------------------------------------------------------------------------------
+ Index Scan using grades_pkey on grades  (cost=0.43..8.45 rows=1 width=15) (actual time=0.039..0.041 rows=1 loops=1)
+   Index Cond: (id = 7)
+ Planning Time: 0.121 ms
+ Execution Time: 0.071 ms
+(4 rows)
+
+here we have find id =7 from index scan but we need to select name so database need to go the heap in order to find name 
+
+
+
+postgres=# explain analyze select id from grades where id=7;
+                                                       QUERY PLAN
+-------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan using grades_pkey on grades  (cost=0.43..4.45 rows=1 width=4) (actual time=1.977..1.981 rows=1 loops=1)
+   Index Cond: (id = 7)
+   Heap Fetches: 0
+ Planning Time: 0.107 ms
+ Execution Time: 2.005 ms
+(5 rows)
+
+
+
+postgres=# create index grades_id_idx on grades(id) include(name);
+CREATE INDEX
+postgres=# explain analyze select name from grades where id=7;
+                                                         QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan using grades_id_idx on grades  (cost=0.43..4.45 rows=1 width=15) (actual time=0.054..0.056 rows=1 loops=1)
+   Index Cond: (id = 7)
+   Heap Fetches: 0
+ Planning Time: 0.570 ms
+ Execution Time: 0.089 ms
+(5 rows)

@@ -1,0 +1,30 @@
+52_querying and checking size of partion
+
+
+explain analyze select count(*) from grade_parts where g=30;
+
+---------------------------------------------------------------------------
+ Aggregate  (cost=2326.41..2326.42 rows=1 width=8) (actual time=25.338..25.342 rows=1 loops=1)
+   ->  Index Only Scan using g0035_g_idx on g0035 grade_parts  (cost=0.43..2078.16 rows=99299 width=0) (actual time=0.169..16.783 rows=100070 loops=1)
+         Index Cond: (g = 30)
+         Heap Fetches: 0
+ Planning Time: 3.197 ms
+ Execution Time: 25.426 ms
+(6 rows)
+
+
+# to check table size
+
+select pg_relation_size(oid),relname from pg_class order by pg_relation_size(oid) desc;
+ pg_relation_size |                    relname
+------------------+------------------------------------------------
+        362479616 | grade_org
+        126894080 | g0035
+         90611712 | g3560
+         72507392 | g80100
+         72482816 | g6080
+         69361664 | grade_org_id_idx
+         24297472 | g0035_g_idx
+         17358848 | g3560_g_idx
+         13893632 | g80100_g_idx
+         13893632 | g6080_g_idx

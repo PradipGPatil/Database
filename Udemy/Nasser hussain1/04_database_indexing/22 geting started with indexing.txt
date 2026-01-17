@@ -1,0 +1,97 @@
+--22 geting started with indexing
+index -is a data structure created based on certain column in table 
+
+# below command to interact with database 
+
+docker exec -it pg bash
+psql -U postgres
+
+
+-- in this folder we have sql query to create this table
+create table employees(id serial not null, name varchar(59));
+
+postgres=# \d employees  -- this terminal is psql terminal  \d we can say describe
+                            Table "public.employees"
+ Column |  Type   | Collation | Nullable |                Default
+--------+---------+-----------+----------+---------------------------------------
+ id     | integer |           | not null | nextval('employees_id_seq'::regclass)
+ name   | text    |           |          |
+Indexes:
+    "employees_pkey" PRIMARY KEY, btree (id)
+
+-- here we have id as primary key , the postgress create b tree index for primary key 
+
+postgres=# explain analyze select id from employees where id=1000;
+                                                          QUERY PLAN
+-------------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan using employees_pkey on employees  (cost=0.42..4.44 rows=1 width=4) (actual time=0.308..0.311 rows=1 loops=1)
+   Index Cond: (id = 1000)
+   Heap Fetches: 0  - as data is available in index does not need to go to the heap file 
+ Planning Time: 0.229 ms -- postgres planner  decide shall we do full table scan or index scan  -- planner keep own static and based on this go for table scan or index scan
+ Execution Time: 0.359 ms
+(5 rows)
+
+
+# when we try to search for name , postgres find id from index get the page number on heap  then go to the heap file and search for name ;
+postgres=# explain analyze select name from employees where id =45454545;
+                                                        QUERY PLAN
+--------------------------------------------------------------------------------------------------------------------------
+ Index Scan using employees_pkey on employees  (cost=0.42..8.44 rows=1 width=6) (actual time=0.100..0.101 rows=0 loops=1)
+   Index Cond: (id = 45454545)
+ Planning Time: 0.302 ms
+ Execution Time: 0.145 ms
+(4 rows)
+
+
+# here we search by name and name do not have index so postgres need to do full table scan 
+
+postgres=# explain analyze select id from employees where name ='Zs';
+                                                       QUERY PLAN
+-------------------------------------------------------------------------------------------------------------------------
+ Gather  (cost=1000.00..11310.94 rows=6 width=4) (actual time=10.095..132.479 rows=31 loops=1)
+   Workers Planned: 2
+   Workers Launched: 2  -- postgress created 2 worker to do this task 
+   ->  Parallel Seq Scan on employees  (cost=0.00..10310.34 rows=2 width=4) (actual time=14.592..63.603 rows=10 loops=3)
+         Filter: (name = 'Zs'::text)
+         Rows Removed by Filter: 333323  -- total row that are not qualified 
+ Planning Time: 0.221 ms
+ Execution Time: 132.561 ms   -- we can see more execution time here than index scan as postgress need to go table/heap file
+(8 rows)
+
+
+-- here we have create index which give result faster
+postgres=# create index employees_name_idx on employees(name);
+CREATE INDEX
+postgres=# explain analyze select id from employees where name ='Zs';
+                                                        QUERY PLAN
+--------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on employees  (cost=4.47..27.93 rows=6 width=4) (actual time=0.247..0.412 rows=31 loops=1)
+   Recheck Cond: (name = 'Zs'::text)
+   Heap Blocks: exact=31
+   ->  Bitmap Index Scan on employees_name_idx  (cost=0.00..4.47 rows=6 width=0) (actual time=0.143..0.144 rows=31 loops=1)
+         Index Cond: (name = 'Zs'::text)
+ Planning Time: 0.780 ms
+ Execution Time: 0.466 ms
+
+
+
+explain analyze select id from employees where name like '%Zs%'; -- this query will need to do full table scan because we have used expression and index do not have express
+-- so database need to do full table scan which is bad query
+Postgres does parallel sq scan not all database do parallel sq scan 
+
+note: avoid doing select * for this database need to do full table scan
+- try to use index to search result
+- 
+
+
+
+
+
+
+
+
+
+
+
+
+

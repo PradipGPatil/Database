@@ -1,0 +1,13 @@
+ database sharding
+1) create init.sql file which will create table
+2) create Dockerfile 
+From postgres
+copy init 
+
+3) create network and run 3 container in same network
+4) // run pgadmin  
+
+docker run --name my-pgadmin -p 80:80 -e PGADMIN_DEFAULT_EMAIL=pradip@gmail.com -e PGADMIN_DEFAULT_PASSWORD=root --network my_network -d dpage/pgadmin4
+
+running docker container 
+docker run --name pg_shard1 -p 5432:5432  --network my_network -d -e POSTGRES_HOST_AUTH_METHOD=trust  pg_sharding
