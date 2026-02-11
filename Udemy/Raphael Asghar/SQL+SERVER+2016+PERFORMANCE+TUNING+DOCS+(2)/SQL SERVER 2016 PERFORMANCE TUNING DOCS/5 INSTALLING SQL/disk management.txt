@@ -1,0 +1,9 @@
+windows + r
+
+diskmgmt.msc
+
+action - create disk
+
+initialize disk - ok
+
+New simple volume - follow wizard
