@@ -1,0 +1,23 @@
+suppose we try to enter neg value for the price 
+we can add validation at server side and dataside. if we do not have admin interface and admin try to manupulate the data directly we should have constrain to the table
+
+row level validation:
+
+default:
+while creating table
+create table products(
+price integer default 9999;
+)
+or after creating table
+alter table products
+alter column price
+set default=999;
+
+unique:
+alter table products
+add unique(price)
+
+check:
+
+
+where to add validation webserver or database;

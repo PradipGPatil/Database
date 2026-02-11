@@ -1,0 +1,32 @@
+
+subquery can be used in 3 place =>identifying structure of data return by each query 
+select => should return single value 
+from or join  => should return rows or we can return single result
+where=>should return source column
+
+
+subquery in form 
+ 
+select
+  p.name,
+  p.price_weight_ratio
+FROM
+  (
+    select
+      name,
+      price / weight as price_weight_ratio
+    FROM
+      products 
+  ) as p WHERE p.price_weight_ratio>5;
+
+from clause can return single result or set of multiple row and column our outer clause should be match with from subquery result
+2. we need to give alias for subquery in order to work 
+
+< all(subquery)=> should return the result of single column
+< some(subquery)=> should return result of single column ; some is alias any
+
+50 > some(20,100) ==> this will return true
+50> some(10,20)==> this will return false
+
+note: aggregate function can not be nested
+

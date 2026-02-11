@@ -1,0 +1,42 @@
+ select * from users;
+
+ -- create view users_view as select * from users;
+ -- select * from users_view;
+ -- drop view users_view;
+--  Q) show the username of the user who were tagged in caption and photo before jan 7,2010 also show the date 
+-- they were tagged 
+select * from caption_tags;
+select * from photo_tags;
+select * from users;
+
+with tags as (
+select created_at , user_id,post_id from caption_tags
+union all
+select created_at, user_id,post_id from photo_tags
+)
+
+select username, tags.created_at
+from  users join  tags on tags.user_id=users.id
+where tags.created_at < '2010-01-07';
+
+with RECURSIVE countdown(val) as (
+select 3 as val -- initial or non recursive query
+union
+select val-1 from countdown where val>1  --recursive query
+)
+
+--   pg create working table and result table behind the scene and give val as a column name to both table 
+-- run non recursive statment and put result in both table
+-- 
+
+select * from countdown;
+
+
+
+
+
+
+
+
+
+

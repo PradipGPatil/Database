@@ -1,0 +1,19 @@
+recursive query
+
+ with RECURSIVE countdown(val) as (
+ select 3 as val  -- initial or no recursive query
+ union  -- always have union keyword
+ select val-1 from countdown where val>1  -- recrusive query
+ )
+
+ select * from countdown;
+
+recursive query created result table and working table behind the scene, it will have one single column 'val'
+result table				working table
+val							val
+3							1
+2
+1
+
+
+if you want to follow graph like structure in that case recursive query is helpful

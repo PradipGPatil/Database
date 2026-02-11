@@ -1,0 +1,17 @@
+Table users{
+  id integer [primary key]
+  username varchar(50)
+}
+
+Table photos{
+  id integer [primary key]
+  url varchar(200)
+  users_id integer [ref: >users.id]
+}
+
+table comments{
+  id integer [primary key]
+  contents varchar(300)
+  users_id integer [ref:>users.id]
+  photos_id integer [ref:>photos.id]
+}

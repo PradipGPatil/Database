@@ -1,0 +1,35 @@
+co -related subquery means 2 query which have relation between each other 
+
+
+-- show the name , department  and price of the most expensive product
+-- in each department
+
+select 
+	name, department, price
+from products p1
+where p1.price=(
+select max(price) from products p2 where p2.department=p1.department)
+
+In above query we can cosider that subquery is inner for loop .
+in p1. price we get one row from table 
+then nested for loop execute on each row and check whether outer loop and inner loop have same department if yes keep the record
+and in last it will find max price 
+
+
+lecture 2) 
+
+-- without using join or group by print the number of order for each department
+-- by using group by
+select * from products;
+select * from orders;
+select 
+	department,
+	count(*)
+from products p join orders o on p.id=o.product_id
+group by department order by department;
+
+select 
+department,
+ count(*)over(partition by department)
+from products p join orders o on p.id=o.product_id
+order by department;

@@ -1,0 +1,11 @@
+select * from users where username='max';
+postgress go throw serias of step 
+parser(check meaning of the query or find error in query, it will create query tree )-> rewriter(make small adjustment to query)->planner-> executor
+
+planner->
+planner decide shall the searching by index or loading all data to memory. in this case consider planner decide to user index because index will give faster result
+
+explain -> build the query plan and display info about it 
+explain analyze -> build the query plan and run it and info about it 
+
+postgres store some data , like no of row which will get before accessing actual data and guss time which might be taken for executing this query

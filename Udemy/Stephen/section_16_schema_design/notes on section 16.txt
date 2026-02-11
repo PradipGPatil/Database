@@ -1,0 +1,33 @@
+rules for like
+1) user can like single post
+2) user can unlike the post
+3) need to find how many like to the post
+4) need to find how like the post (may be top 3 )
+5) we may should consider the user can like comment
+6) user may want to dislike post (or add other reaction)
+
+== we can create like with user_id and post_id and add unique constrain to the both table which will give ensure user can like on one post
+
+add comments like 
+1) polymorphic association
+
+ we have column which refer to the to table 
+ eg. liked_id and liked_type(comment, post) here we can not add foreign key constraints to liked_id. so can add liked_id=999 which doesnot refer to any column 
+ which result in data inconsistance 
+ 
+ 2) alternative approch
+ add post_id and comment_id to likes table and we still want to make sure post_id or comment_id should not be null
+ 
+ coalesce(post_id::boolean::integer,0)+coalesce((comment_id)::boolean::integer,0)=1
+ 
+ coalesce return the value between 2 argument which is not null
+ 
+ downside: if user has many other options to like eg posts, live stream then we need 
+ to add many diff column and need to add check 
+ 
+ 3) create posts_like and comment_likes table with column user_id and comment_id
+this apporch will be greate if we have addintion content types of lik 
+ 
+ among above 3 approch we will use 2 nd apporch 
+ 
+ 

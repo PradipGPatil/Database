@@ -1,0 +1,103 @@
+to check constrain for table 
+
+
+INFORMATION_SCHEMA provides access to database metadata.
+
+Metadata is data about the data, such as the name of a database or table, the data type of a column, or access privileges. Other terms that sometimes are used for this information are data dictionary and system catalog
+
+SELECT * FROM INFORMATION_SCHEMA.table_constraints where table_name='users';
+
+
+in where clause we do math cal for column like *,+,_,?
+
+-- while designing database general google for database
+
+relation 
+1) one to one relation
+2) many to many relation
+3) one to many relation => has many
+4) many to one relation => has one
+
+employess has one companies
+companies has many offices=> offices contain offices id as foreign key
+offices has many employess => employee id foreign key
+
+generally foreign key has to many side
+1) when we try to add column in user_id column which not referring to the id column in user	
+we will get error which will help for data consistence
+2) for some reason we insert null value in foreign key it will inset the value
+
+we can add on delete option for foreign key constrain
+1) on delete cascade=> delete photo to !
+2) on delete set null=> set the 'user_id' of the photo to null
+3) on delete set default=> set 'user_id' of the photo to the default value if one is provided
+
+primary key =not null and unique value which help to identify row uniquely
+For sql server cluster index is created when we assign primary key
+
+create table office(
+id integer primary key,
+department varchar(20)
+);
+
+create table employee(
+id integer primary key,
+name varchar(20),
+office_id integer references office(id)
+);
+
+
+// column level primary key 
+create table category(
+id serial primary key,
+name varchar(20),
+)
+
+// table level primary key which will help to add composite key
+create table category(
+id serial ,
+name varchar(20),
+primary key(id)
+)
+
+create table category(
+id serial ,
+name varchar(20),
+constraint pk_category_id primary key(id)  // give default constraint name 
+);
+
+// drop key
+
+alter table products
+drop constraint products_pkey;
+
+// two way of adding key 
+alter table products
+add  primary key(id);
+
+
+// we have give constraint name for primary key if we do not provide database will provide the constraint automatically for you
+alter table products
+add constraint product_id primary key(id);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

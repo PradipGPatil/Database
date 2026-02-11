@@ -1,0 +1,51 @@
+full table scan=
+select * from users where name ="max"
+then database need to load heap file from the hard drive to the ram(memory) and need to scan the result
+this is know as full table scan
+
+suppose we have some mechanism which will tell on which block 'max' is stored so database can load only this block to the RAM and search for 'max'
+
+this mechanism is called index (index is another type of data structure)
+
+How index work ?
+find on which column we want to create index for above example it's name 
+so it will go throw each name and find block/index number for each row eg. 'max' block no2 and index 1
+so we have recorded block number and index for each records for username
+
+then sort this data in meaningful way 
+organize this into tree like data 
+root node -> leaf node 1 && leaf node 2 
+- add helper to the root node which will help to go specific leaf node 
+
+how to create index
+create index on users(username);  -- users table and username column
+if do not provide index database will give name users_username_idx 
+
+to drop index
+drop index users_username_idx ; -- drop index indexName;
+
+add keyword 'explain analyze' before query to check how much time takes to execute the query
+
+downside of index's ->
+for storing index hard drive memory is used 
+select pg_size_pretty(pg_relation_size('users')); use this query to check memory used
+-- having index slow down insert,update and deletion
+-- index might not be used by Postgres
+-- cost of storage for cloud providers
+
+index types->
+b tree index and some other type but 99% b tree index is used
+
+automatically generated index ->
+for primary key and unique key , Postgres automatically created the index for table but this index's does not show under pg admin
+
+-- to check index for pk and unique
+select relname,relkind from pg_class where relkind='i';
+
+
+behind the scene for index->
+
+create extension pageinspect; -- run this commond on pg admin
+select * from bt_metap('users_username_idx');-- bt b tree , mtp stands for metaspace 
+
+index uses same structure for storing data which we have seen earlier

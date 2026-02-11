@@ -1,0 +1,25 @@
+--The DATEDIFF() function calculates the difference between two date or timestamp values and returns the result in a specified unit, such as days, months, or years
+
+use adventureWorks2022
+go
+SELECT DATEDIFF(year, '2022-12-31', '2024-06-01') AS years_difference;
+
+
+-- here if we place zero mean '1900-01-01 00:00:00'
+select DATEDIFF(
+  day,
+  0,
+ '1900-01-01 23:59:59'
+)
+
+-- it calculate how many midnight passed
+select DATEDIFF(
+  day,
+  0,
+ '1900-01-02 00:00:00'
+)
+
+SELECT 
+    DATEDIFF(hour, '2023-12-31 00:00:00', '2023-12-31 23:59:59') AS hours_difference,
+    DATEDIFF(minute, '2023-12-31 00:00:00', '2023-12-31 23:59:59') AS minutes_difference,
+    DATEDIFF(second, '2023-12-31 00:00:00', '2023-12-31 23:59:59') AS seconds_difference;

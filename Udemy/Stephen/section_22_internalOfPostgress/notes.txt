@@ -1,0 +1,40 @@
+21- internal of the postgress
+
+show data_directory => give the location at where data is stored
+- go to the base directory where data is stored
+
+select oid , datname from pg_database;
+to check oid of each database
+oid = internal identifier (oid mean object identifier)
+
+select * from pg_class;
+to find each file in oid
+
+find manually user table oid 
+
+
+heap file =file that contain all data (rows) of our table
+Tuples or item= indivisaul row of table
+block or page=The heap file is divided into many diff block or page. Each block/page store some number of rows  always 8kb size
+
+for vs code we need to add hex editor plugin to see binary file
+1kb = 896 bytes
+
+
+Item					Description
+PageHeaderData			24 bytes long. Contains general information about the page, including free space pointers.
+ItemIdData				Array of item identifiers pointing to the actual items. Each entry is an (offset,length) pair. 4 bytes per item.
+Free space				The unallocated space. New item identifiers are allocated from the start of this area, new items from the end.
+Items					The actual items themselves.
+Special space			Index access method specific data. Different methods store different data. Empty in ordinary tables.
+
+
+header information contain 
+pd-lower value=> no of byte start of page to start of free space
+pd-upper => end of free space 
+
+after header information to free space all 4 bytes are itemid data
+itemid contain start of item it and length of the item
+
+so in general 
+heap file contain information about page , itemid ,free space 

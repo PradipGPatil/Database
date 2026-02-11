@@ -1,0 +1,28 @@
+
+-- database structure desing pattern
+
+table users{
+id serial [pk,increment]
+created_at timestamp
+updated_at timestamp
+username varchar(40)
+
+}
+
+table posts{
+  id serial [pk,increment]
+  created_at timestamp
+  updated_at timestamp
+  url varchar(200)
+  user_id integer [ref:> users.id]
+
+}
+
+table comments{
+id serial [pk,increment]
+created_at timestamp
+updated_at timestamp
+contents varchar(240)
+post_id integer [ref: >posts.id]
+user_id integer [ref:>users.id]
+}

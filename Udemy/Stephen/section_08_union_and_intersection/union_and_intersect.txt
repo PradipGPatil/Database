@@ -1,0 +1,7 @@
+set means result of multiple query
+-union remove duplicate from 2 set of data
+- union all => does not remove duplicate from 2 set of data
+- intersect => find the rows common in the results of two query. Remove duplicates
+- intersect all=. find the rwos common in the results of two queries
+expect =>find the rows that are present in first qeury but not second query . Remove duplictes ()
+expect all => find the rows that are present in first query but not second query
