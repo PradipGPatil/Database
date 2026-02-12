@@ -1,0 +1,22 @@
+select  c.name, * from sys.indexes i 
+left outer join sys.index_columns ic 
+	on i.object_id=ic.object_id and i.index_id=ic.index_id
+left outer join sys.columns c on ic.object_id=c.object_id and ic.column_id=c.column_id
+where i.object_id=OBJECT_ID('HumanResources.Department');
+
+
+-- FINDIN COLUMN NAME ALONG WITH DATA TYPE 
+
+select c.name,ts.name,* from sys.tables t
+left outer join sys.columns c on c.object_id=t.object_id
+left outer join sys.types ts on ts.user_type_id=c.user_type_id
+
+where t.name='Department'
+
+
+-- want to drop index 
+drop index index_name on tablename;
+
+-- CREATING NON CLUSTERED INDEX
+
+create nonclustered index idx_department_name on humanResources.department(name);
